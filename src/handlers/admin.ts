@@ -74,16 +74,16 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
       return;
     }
     
-    const orders = getAllOrders(10);
+    const orders = getNewOrders(10);
     
     if (orders.length === 0) {
       await ctx.answerCbQuery();
-      await ctx.reply('Hozircha buyurtmalar yo\'q.');
+      await ctx.reply('Hozircha yangi buyurtmalar yo\'q.');
       return;
     }
     
     await ctx.answerCbQuery();
-    await ctx.reply('📋 Oxirgi 10 ta buyurtma:\n');
+    await ctx.reply('📋 Oxirgi 10 ta yangi buyurtma:\n');
     
     for (const order of orders) {
       await ctx.reply(formatOrderListItem(order));
