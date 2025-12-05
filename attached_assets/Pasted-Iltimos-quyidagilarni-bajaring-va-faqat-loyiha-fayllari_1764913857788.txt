@@ -1,0 +1,592 @@
+Iltimos, quyidagilarni bajaring va faqat loyiha fayllarini chiqaring (kommentariyalar bilan kod ichida OK):
+
+Vazifa: Milliy Brend Reklama agentligi uchun Telegram-bot yozing. Texnologiya: Node.js + TypeScript + telegraf. Maqsad — mijozlardan buyurtma qabul qilish, buyurtma statusini tekshirish, portfolio, bog‘lanish, va admin uchun mini-CRM (yangi buyurtmalar, status o‘zgartirish, broadcast).
+
+Talablar (ancha batafsil, barchasini bajarish shart):
+
+Project structure: aniq papkalar va fayllar (package.json, tsconfig.json, src/index.ts, src/db.ts va boshqalar). Replit-ga mos start script bilan.
+
+Bot framework: telegraf (TypeScript), async/await ishlatilgan, kod toza va modulga bo‘lingan minimal strukturada.
+
+Ma’lumotlar bazasi: sqlite (better-sqlite3 yoki sqlite3), jadval orders quyidagi maydonlar bilan:
+
+id (MBR-XXXX formatiga o‘xshash)
+
+user_id
+
+user_name
+
+phone
+
+service_type
+
+company_name
+
+description
+
+size_format
+
+address
+
+deadline
+
+budget_range
+
+status
+
+files (JSON)
+
+created_at, updated_at
+
+Foydalanuvchi funksional:
+
+/start menyusi (klaviatura): 🧾 Buyurtma berish, 📂 Ishlarimiz (Portfolio), 📊 Buyurtmam holati, 📞 Bog‘lanish, ℹ️ Agentlik haqida
+
+Buyurtma wizard (step-by-step): xizmat turi → kompaniya nomi → izoh → o‘lcham → manzil → deadline → budjet (inline tugmalar) → fayl (document) yoki “❌ Fayl yo‘q” → aloqa ismi → telefon → tasdiqlash → saqlash
+
+Bot buyurtma saqlaganda userga buyurtma raqamini beradi: MBR-XXXX (unique)
+
+📊 Buyurtmam holati bo‘limi: user buyurtma ID kiritsa bot statusni ko‘rsatadi; topilmasa xato habar.
+
+📂 Ishlarimiz (Portfolio): media group yoki rasm stub / misol ko‘rsatish. (Media fayllarni qanday joylashni qisqacha ko‘rsat)
+
+📞 Bog‘lanish: telefonlar, Telegram username, manzil va user yozgan savollar admin guruhiga forward qilinishi (format bilan).
+
+ℹ️ Agentlik haqida: agentlikning qisqacha matni.
+
+Admin funksional:
+
+Adminlar IDlari .env ichida ADMIN_IDS sifatida bo‘lsin.
+
+/admin menusi (inline tugmalar): 📋 Yangi buyurtmalar, 🔍 Buyurtma qidirish, 📝 Status o‘zgartirish, 📢 Broadcast
+
+📋 Yangi buyurtmalar: oxirgi 10 ta yangi buyurtma va /open_MBR-XXXX ko‘rinishida tugma/komanda.
+
+/open_MBR-XXXX — buyurtma to‘liq maʼlumotini chiqaradi va inline tugmalar orqali statusni: YANGI, DIZAYN BOSQICHIDA, MIJOZ TASDIQIDA, ISHLAB CHIQARISHDA, O‘RNATILMOQDA, YOPILGAN ga o‘zgartirish.
+
+Status o‘zgartirilganda userga (agar user_id mavjud bo‘lsa) avtomatik habar yuborilsin.
+
+Broadcast: admin matn yozadi → tasdiqlash → barcha distinct user_id lariga habar jo‘natiladi.
+
+Fayl va media:
+
+Document fayllar telegram file_id sifatida bazada JSON saqlansin. (Agar Replit uchun lokal fayl saqlash ko‘rsatmasi bersangiz, ko‘rsatma qiling.)
+
+Xavfsizlik va validatsiya:
+
+Admin-only komandalar tekshiruvi (ADMIN_IDS).
+
+User input uchun minimal validatsiya (masalan: order id format, telefon raqamining mavjudligi).
+
+Konfiguratsiya:
+
+.env fayl orqali BOT_TOKEN, ADMIN_IDS (comma separated) va boshqa kerakli sozlamalar.
+
+Ishga tushirish:
+
+package.json ichida start, dev skriptlar (ts-node bilan dev) va README bilan qisqacha how to run.
+
+Output format talab:
+
+AI faqat kerakli loyihani fayl strukturasi bilan birga tarqatiladigan kod ko‘rsatishi — hech qanday ortiqcha uzun izohlar yoki nazariy ma’lumotlar bermasin. Agar kerakli joylarda izoh yozilsa, kod ichidagi qisqa kommentariyalar yetarli.
+
+Qo‘shimcha:
+
+Kod modulga bo‘lingan, lekin bitta fayl kerak bo‘lsa minimal src/index.ts versiyasini ham bering.
+
+Unit testlar shart emas, lekin qisqa eʼtibor (error handling) qo‘shilsin.
+
+END: Paste your full scenario here:
+
+📍 The Beauty Room – 3D bo‘rtma harf
+Fon: qora, harflar: oq, LED yoritish
+Manzil: Samarkand
+
+Bo‘lim oxirida:
+
+Bot:
+
+Sizga shunga o‘xshash reklama kerakmi?
+“🧾 Buyurtma berish” tugmasini bosing 👇
+
+Tugmalar:
+
+🧾 Buyurtma berish
+
+🔙 Asosiy menyu
+
+5️⃣ Menyu: 📊 BUYURTMAM HOLATI
+
+User tugma bosadi: 📊 Buyurtmam holati
+
+Bot:
+
+Buyurtma raqamingizni kiriting:
+(Masalan: MBR-1024)
+
+User: MBR-1024
+
+Bot:
+
+Iltimos, kuting, ma’lumotlar tekshirilmoqda...
+
+Developer backend’da buyurtmani statusiga qarab javob qaytaradi:
+
+Bot (topilsa):
+
+Buyurtma: MBR-1024
+
+Xizmat turi: 3D lettering
+Kompaniya: The Beauty Room
+Status: DIZAYN BOSQICHIDA
+Taxminiy tayyor bo‘lish vaqti: 10-dekabr, soat 18:00
+
+Qo‘shimcha savollar bo‘lsa, “📞 Bog‘lanish” bo‘limidan murojaat qilishingiz mumkin.
+
+Agar topilmasa:
+
+Bot:
+
+Kechirasiz, bu raqam bo‘yicha buyurtma topilmadi.
+Raqamni tekshirib, qaytadan urining yoki operatorlarimiz bilan bog‘laning.
+
+6️⃣ Menyu: 📞 BOGLANISH
+
+User tugma bosadi: 📞 Bog‘lanish
+
+Bot:
+
+Biz bilan quyidagi usullar orqali bog‘lanishingiz mumkin:
+
+☎️ Telefon: +998 (raqam1)
+☎️ Telefon: +998 (raqam2)
+📲 Telegram: @username
+📍 Manzil: Samarkand, ...
+
+Savolingiz bo‘lsa, shu yerga yozib qoldiring – menejerlarimiz siz bilan bog‘lanishadi.
+
+User yozgan har qanday savol:
+
+Adminlar guruhiga forward qilinadi:
+
+✉️ Yangi savol botdan:
+User: @username / full name
+Matn: ...
+
+Bot userga:
+
+Savolingiz qabul qilindi ✅
+Tez orada siz bilan bog‘lanamiz.
+
+7️⃣ Menyu: ℹ️ AGENTLIK HAQIDA
+
+User tugma bosadi: ℹ️ Agentlik haqida
+
+Bot:
+
+🎯 Milliy Brend Reklama Agentligi
+“Grafika, poligrafiya va innovatsion reklama markazi”
+
+Asosiy yo‘nalishlar:
+• Grafika va SMM dizayn
+• Poligrafiya (vizitka, flyer, buklet, menyu, katalog)
+• 3D burtma harflar va hajmli yozuvlar
+• Brending va rebrending
+• Veb-sayt va taqdimot dizayni
+
+Bizning maqsadimiz – sizning biznesingizni yangi bosqichga olib chiqish va brendingizni bozorda ajralib turadigan darajaga chiqarish.
+
+Batafsil ma’lumot uchun:
+📞 Telefon: +998 ...
+🌐 Sayt: (keyin qo‘shiladi)
+
+Tugma:
+
+🧾 Buyurtma berish
+
+🔙 Asosiy menyu
+
+8️⃣ ADMIN PANEL (faqat adminlar uchun)
+
+Adminlar uchun /admin komanda:
+
+Admin yozadi: /admin
+
+Agar admin bo‘lsa – Bot:
+
+⚙️ Admin panel
+Tanlang:
+
+Tugmalar:
+
+📋 Yangi buyurtmalar
+
+🔍 Buyurtma qidirish
+
+📝 Status o‘zgartirish
+
+📢 Broadcast (xabar yuborish)
+
+🔙 Asosiy menyu
+
+8.1. 📋 Yangi buyurtmalar
+
+Bot:
+
+Oxirgi 10 ta yangi buyurtma:
+
+Keyingi formatda chiqaradi:
+
+ID: MBR-1024
+Ism: ...
+Xizmat: ...
+Status: YANGI
+/open_MBR-1024
+
+Admin: /open_MBR-1024 yozsa:
+
+Bot:
+
+ID: MBR-1024
+Barcha ma’lumotlarni chiqaradi (kompaniya, izoh, fayl, kontakt...)
+
+8.2. 📝 Status o‘zgartirish
+
+Admin tugma bosadi: 📝 Status o‘zgartirish
+
+Bot:
+
+Qaysi buyurtma ID sini o‘zgartirishni xohlaysiz?
+(Masalan: MBR-1024)
+
+Admin ID yuboradi.
+
+Bot:
+
+Yangi statusni tanlang:
+
+Tugmalar:
+
+🟢 YANGI
+
+🟡 DIZAYN BOSQICHIDA
+
+🔵 MIJOZ TASDIQIDA
+
+🟣 ISHLAB CHIQARISHDA
+
+🟤 O‘RNATILMOQDA
+
+⚫️ YOPILGAN
+
+Tanlangandan keyin:
+
+Bot:
+
+Status muvaffaqiyatli o‘zgartirildi ✅
+
+User tomonida ham (agar xohlasangiz) avtomatik xabar ketishi mumkin:
+
+Buyurtmangiz MBR-1024 statusi yangilandi:
+Yangi status: DIZAYN BOSQICHIDA
+
+8.3. 📢 Broadcast
+
+Admin tugma bosadi: 📢 Broadcast
+
+Bot:
+
+Barcha foydalanuvchilarga yuboriladigan xabar matnini yozing:
+
+Admin matn yozadi.
+
+Bot:
+
+Tasdiqlaysizmi?
+
+Tugmalar:
+
+✅ Ha, yuborilsin
+
+❌ Bekor qilish
+
+✅ Ha bo‘lsa – barcha userlarga xabar tarqatiladi.
+
+9️⃣ Texnik eslatmalar (dasturchi uchun qisqacha)
+
+Har bir user uchun user_id, name, phone, so‘rovlar tarixi saqlanishi foydali.
+
+Har bir buyurtma uchun:
+
+order_id (MBR-XXXX)
+
+user_id
+
+service_type
+
+company_name
+
+description
+
+size_format
+
+address
+
+deadline
+
+budget_range
+
+files
+
+status
+
+created_at, updated_at
+
+Adminlar ro‘yxati: ADMIN_IDS = [id1, id2, ...]
+
+Quyida Milliy Brend Reklama Agentligi uchun Telegram bot ssenariysini tuzib berdim: menyular, matnlar, qadamlar hammasi tayyor.
+
+1️⃣ Bot haqida qisqacha
+
+Bot nomi (misol): Milliy Brend Reklama | Bot
+Maqsad:
+
+Mijozlardan buyurtma olish
+
+Ishlar portfoliolarini ko‘rsatish
+
+Mijozlarga aloqa ma’lumotlarini berish
+
+Buyurtma statusini kuzatish
+
+Adminlar uchun CRMga o‘xshash boshqaruv
+
+2️⃣ Boshlanish – /start ssenariysi
+
+/start bosilganda:
+
+Bot:
+
+Assalomu alaykum! 👋
+Siz Milliy Brend Reklama Agentligining rasmiy botidasiz.
+Bu yerda siz:
+• Reklama va dizayn bo‘yicha buyurtma berishingiz
+• Oldingi ishlarimizni ko‘rishingiz
+• Buyurtmangiz holatini kuzatishingiz
+• Operatorlarimiz bilan bog‘lanishingiz mumkin.
+
+Quyidagilardan birini tanlang 👇
+
+Asosiy menyu tugmalari:
+
+🧾 Buyurtma berish
+
+📂 Ishlarimiz (Portfolio)
+
+📊 Buyurtmam holati
+
+📞 Bog‘lanish
+
+ℹ️ Agentlik haqida
+
+(Adminlar uchun yashirin: ⚙️ Admin panel – faqat /admin orqali)
+
+3️⃣ Menyu: 🧾 BUYURTMA BERISH
+
+User tugma bosadi: 🧾 Buyurtma berish
+
+Bot:
+
+Qanday xizmat bo‘yicha buyurtma bermoqchisiz? 👇
+
+Xizmat turlari:
+
+🎨 Grafika dizayni (post, banner, logo...)
+
+🖨 Poligrafiya (vizitka, flyer, buklet, katalog)
+
+🧱 3D lettering va hajmli yozuvlar
+
+🧬 Brending / Rebrending
+
+📱 SMM dizayn (Instagram, TikTok, YouTube)
+
+🧾 Boshqa xizmat (izohda yozaman)
+
+3.1. Xizmat tanlangandan keyin umumiy forma
+
+Bot:
+
+Kompaniya yoki brend nomini yozing:
+(Masalan: “Milliy Mebel”, “The Beauty Room”)
+
+User: matn yuboradi.
+
+Bot:
+
+Qisqacha izoh yozing, sizga qanday reklama/dizayn kerak?
+(Masalan: 3x6 banner, qora fon, oq harf, premium uslub, yoki: 3D yozuv kirish qismga...)
+
+User: izoh.
+
+Bot:
+
+O‘lcham yoki formatni kiriting (agar ma’lum bo‘lsa):
+(Masalan: 3x6 m, 300x70 sm, kvadrat post 1080x1080 va hokazo)
+
+User: o‘lcham.
+
+Bot:
+
+Buyurtma qayerga kerak?
+(Manzil yoki shahar: Samarkand, Pastdarg‘om, manzil va h.k.)
+
+User: manzil.
+
+Bot:
+
+Qachongacha tayyor bo‘lishi kerak? ⏰
+(Masalan: 3 kun ichida, 10-dekabrgacha va hokazo)
+
+User: deadline.
+
+Bot:
+
+Taxminiy budjetingizni tanlang 💰
+
+Tugmalar:
+
+💵 1 000 000 gacha
+
+💵 1 000 000 – 3 000 000
+
+💵 3 000 000 – 5 000 000
+
+💵 5 000 000 dan yuqori
+
+🤝 Aniq emas, kelishamiz
+
+User tanlaydi.
+
+Bot:
+
+Agar logo, eski dizayn yoki texnik topshiriq fayllaringiz bo‘lsa, shu yerga yuboring (rasm, PDF, doc va h.k.).
+Agar hech narsa bo‘lmasa, “❌ Fayl yo‘q” tugmasini bosing.
+
+Tugmalar:
+
+📎 Fayl yuboraman (oddiy attach)
+
+❌ Fayl yo‘q
+
+(Fayl bo‘lsa – bot saqlaydi, bo‘lmasa – keyingi qadamga o‘tadi.)
+
+Bot (keyin):
+
+Aloqa uchun ism va familiyangizni yozing:
+
+User: ism familiya.
+
+Bot:
+
+Telefon raqamingizni yuboring 📱
+Tugmadan foydalanishingiz mumkin 👇
+
+Tugma:
+
+📲 Raqamni yuborish (contact)
+
+(Agar user contact yubormasa, odiy matn ham qabul qilinadi.)
+
+3.2. Buyurtmani tasdiqlash
+
+Bot ichida buyurtma ma’lumotlari jamlanadi va userga ko‘rsatiladi:
+
+Bot:
+
+✅ Buyurtma ma’lumotlari:
+• Xizmat turi: ...
+• Kompaniya: ...
+• Izoh: ...
+• O‘lcham / format: ...
+• Manzil: ...
+• Muddat: ...
+• Budjet: ...
+• Ism: ...
+• Telefon: ...
+
+Hammasi to‘g‘rimi?
+
+Tugmalar:
+
+✅ Tasdiqlash
+
+✏️ O‘zgartirish (buyurtmani qaytadan to‘ldirish)
+
+User: ✅ Tasdiqlash bosganda:
+
+Bot:
+
+Rahmat! 🎉
+Buyurtmangiz qabul qilindi.
+Bizning menejerlarimiz tez orada siz bilan bog‘lanishadi.
+
+Buyurtma raqamingiz: MBR-{{ID}}
+Shu raqam orqali “📊 Buyurtmam holati” bo‘limidan kuzatishingiz mumkin.
+
+3.3. Adminlarga xabar
+
+Developer uchun:
+
+Har bir buyurtma adminlar guruhiga yuboriladi (ADMIN_CHAT_ID).
+
+Strukturasi:
+
+🆕 Yangi buyurtma!
+
+ID: MBR-{{ID}}
+Xizmat turi: ...
+Kompaniya: ...
+Izoh: ...
+O‘lcham: ...
+Manzil: ...
+Muddat: ...
+Budjet: ...
+Ism: ...
+Telefon: ...
+
+Status: YANGI
+Statusni /status_{{ID}} komandasi orqali o‘zgartiring.
+
+4️⃣ Menyu: 📂 ISHLARIMIZ (PORTFOLIO)
+
+User tugma bosadi: 📂 Ishlarimiz (Portfolio)
+
+Bot:
+
+Qaysi yo‘nalishdagi ishlarimizni ko‘rmoqchisiz? 👇
+
+Tugmalar:
+
+📌 3D lettering va hajmli yozuvlar
+
+🖨 Banner va poligrafiya
+
+🎨 Logotip va brending
+
+📱 SMM dizaynlar
+
+🔙 Orqaga
+
+Har bir bo‘limda:
+
+Bot oldindan tayyorlangan 5–10 ta rasm/mediani media group yoki bitta-bitta bilan chiqaradi.
+
+Har bir rasm ostida qisqa izoh
+
+
+Agar imkon bo‘lsa, ikkita variant bering:
+
+minimal single-file src/index.ts (tez ishga tushirish uchun)
+
+modular project (src/, src/db.ts, src/handlers/*.ts, package.json)
