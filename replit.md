@@ -1,7 +1,7 @@
 # Milliy Brend Reklama Bot
 
 ## Overview
-Telegram bot for Milliy Brend Reklama Agentligi - an advertising agency. The bot handles order collection, portfolio display, order status tracking, contact information, and admin CRM functionality.
+Telegram bot for Milliy Brend Reklama Agentligi - an advertising agency. The bot handles order collection, portfolio display, order status tracking, contact information, and admin CRM functionality with dynamic content management.
 
 ## Tech Stack
 - **Runtime**: Node.js 20 with TypeScript
@@ -14,12 +14,12 @@ Telegram bot for Milliy Brend Reklama Agentligi - an advertising agency. The bot
 src/
   index.ts          # Main entry point, bot initialization
   config.ts         # Configuration and environment variables
-  db.ts             # Database operations (SQLite)
-  keyboards.ts      # Telegram keyboard definitions
-  texts.ts          # All bot text messages
+  db.ts             # Database operations (SQLite) with all tables
+  keyboards.ts      # Telegram keyboard definitions (dynamic)
+  texts.ts          # All bot text messages (dynamic from DB)
   handlers/
     user.ts         # User-facing handlers (order wizard, portfolio, etc.)
-    admin.ts        # Admin panel handlers (order management, broadcast)
+    admin.ts        # Admin panel handlers (order management, settings, broadcast)
 ```
 
 ## Environment Variables
@@ -30,7 +30,7 @@ src/
 
 ### User Features
 1. **Order Wizard** - Step-by-step order collection:
-   - Service type selection
+   - Service type selection (dynamic from database)
    - Company name
    - Description
    - Size/format
@@ -40,16 +40,30 @@ src/
    - File attachments
    - Contact information
 
-2. **Portfolio** - Browse agency work examples by category
+2. **Portfolio** - Browse agency work examples by category (dynamic from database)
 3. **Order Status** - Check order status by MBR-XXXX ID
-4. **Contact** - Agency contact info with question forwarding to admins
-5. **About** - Agency information
+4. **Contact** - Agency contact info (dynamic) with question forwarding to admins
+5. **About** - Agency information (editable by admin)
 
 ### Admin Features (via /admin command)
-1. **New Orders** - View latest 10 orders
+1. **New Orders** - View latest 10 new orders
 2. **Order Search** - Search by ID, company, name, or phone
 3. **Status Change** - Update order status with user notification
 4. **Broadcast** - Send messages to all users
+5. **Settings Menu**:
+   - **Xizmatlar (Services)** - Add/remove service types
+   - **Portfolio** - Manage categories and portfolio items with photos
+   - **Kompaniya ma'lumotlari** - Edit phone numbers, Telegram, address, about text
+
+## Database Schema
+
+### Tables
+- **orders** - All order information including files as JSON array
+- **users** - All bot users for broadcast functionality
+- **services** - Dynamic service types (emoji, name, callback_id)
+- **portfolio** - Portfolio items (category, title, description, photo_id)
+- **portfolio_categories** - Portfolio categories (emoji, name, callback_id)
+- **settings** - Key-value store for company settings (phone1, phone2, telegram, address, about_text)
 
 ## Order Statuses
 - YANGI (New)
@@ -66,6 +80,9 @@ npm run build  # Build TypeScript
 npm run prod   # Run production build
 ```
 
-## Database Schema
-Orders table stores all order information including files as JSON array of Telegram file_ids.
-Users table tracks all bot users for broadcast functionality.
+## Recent Changes
+- Added dynamic service management for admins
+- Added dynamic portfolio management with photo support
+- Added company settings management (phone, telegram, address, about text)
+- All user-facing content now loads from database
+- Admin panel extended with "Sozlamalar" section

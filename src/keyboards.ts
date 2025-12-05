@@ -1,4 +1,5 @@
 import { Markup } from 'telegraf';
+import { getActiveServices, getActivePortfolioCategories, getAllServices, getAllPortfolioCategories, getAllPortfolioItems, Service, PortfolioCategory, PortfolioItem } from './db';
 
 export const mainMenuKeyboard = Markup.keyboard([
   ['🧾 Buyurtma berish', '📂 Ishlarimiz (Portfolio)'],
@@ -6,14 +7,17 @@ export const mainMenuKeyboard = Markup.keyboard([
   ['ℹ️ Agentlik haqida']
 ]).resize();
 
-export const serviceTypesKeyboard = Markup.inlineKeyboard([
-  [Markup.button.callback('🎨 Grafika dizayni', 'service_grafika')],
-  [Markup.button.callback('🖨 Poligrafiya', 'service_poligrafiya')],
-  [Markup.button.callback('🧱 3D lettering va hajmli yozuvlar', 'service_3d')],
-  [Markup.button.callback('🧬 Brending / Rebrending', 'service_brending')],
-  [Markup.button.callback('📱 SMM dizayn', 'service_smm')],
-  [Markup.button.callback('🧾 Boshqa xizmat', 'service_boshqa')]
-]);
+export const getDynamicServiceTypesKeyboard = () => {
+  const services = getActiveServices();
+  if (services.length === 0) {
+    return Markup.inlineKeyboard([
+      [Markup.button.callback('⚠️ Xizmatlar mavjud emas', 'no_services')],
+      [Markup.button.callback('🔙 Asosiy menyu', 'back_main')]
+    ]);
+  }
+  const buttons = services.map(s => [Markup.button.callback(`${s.emoji} ${s.name}`, s.callback_id)]);
+  return Markup.inlineKeyboard(buttons);
+};
 
 export const budgetKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('💵 1 000 000 gacha', 'budget_1m')],
@@ -32,13 +36,18 @@ export const confirmOrderKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('✏️ O\'zgartirish', 'edit_order')]
 ]);
 
-export const portfolioCategoriesKeyboard = Markup.inlineKeyboard([
-  [Markup.button.callback('📌 3D lettering va hajmli yozuvlar', 'portfolio_3d')],
-  [Markup.button.callback('🖨 Banner va poligrafiya', 'portfolio_banner')],
-  [Markup.button.callback('🎨 Logotip va brending', 'portfolio_logo')],
-  [Markup.button.callback('📱 SMM dizaynlar', 'portfolio_smm')],
-  [Markup.button.callback('🔙 Orqaga', 'back_main')]
-]);
+export const getDynamicPortfolioCategoriesKeyboard = () => {
+  const categories = getActivePortfolioCategories();
+  if (categories.length === 0) {
+    return Markup.inlineKeyboard([
+      [Markup.button.callback('⚠️ Kategoriyalar mavjud emas', 'no_categories')],
+      [Markup.button.callback('🔙 Orqaga', 'back_main')]
+    ]);
+  }
+  const buttons = categories.map(c => [Markup.button.callback(`${c.emoji} ${c.name}`, c.callback_id)]);
+  buttons.push([Markup.button.callback('🔙 Orqaga', 'back_main')]);
+  return Markup.inlineKeyboard(buttons);
+};
 
 export const portfolioBackKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('🧾 Buyurtma berish', 'start_order')],
@@ -55,7 +64,72 @@ export const adminMenuKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('🔍 Buyurtma qidirish', 'admin_search')],
   [Markup.button.callback('📝 Status o\'zgartirish', 'admin_change_status')],
   [Markup.button.callback('📢 Broadcast', 'admin_broadcast')],
+  [Markup.button.callback('⚙️ Sozlamalar', 'admin_settings')],
   [Markup.button.callback('🔙 Asosiy menyu', 'back_main')]
+]);
+
+export const adminSettingsKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('🔧 Xizmatlar', 'admin_manage_services')],
+  [Markup.button.callback('🖼 Portfolio', 'admin_manage_portfolio')],
+  [Markup.button.callback('🏢 Kompaniya ma\'lumotlari', 'admin_company_info')],
+  [Markup.button.callback('🔙 Admin panel', 'admin_back')]
+]);
+
+export const getServicesManageKeyboard = () => {
+  const services = getAllServices();
+  const buttons: any[] = [];
+  for (const s of services) {
+    buttons.push([Markup.button.callback(`❌ ${s.emoji} ${s.name}`, `delete_service_${s.id}`)]);
+  }
+  buttons.push([Markup.button.callback('➕ Yangi xizmat qo\'shish', 'add_service')]);
+  buttons.push([Markup.button.callback('🔙 Orqaga', 'admin_settings')]);
+  return Markup.inlineKeyboard(buttons);
+};
+
+export const getPortfolioManageKeyboard = () => {
+  return Markup.inlineKeyboard([
+    [Markup.button.callback('📁 Kategoriyalar', 'admin_portfolio_categories')],
+    [Markup.button.callback('🖼 Portfolio ishlar', 'admin_portfolio_items')],
+    [Markup.button.callback('🔙 Orqaga', 'admin_settings')]
+  ]);
+};
+
+export const getPortfolioCategoriesManageKeyboard = () => {
+  const categories = getAllPortfolioCategories();
+  const buttons: any[] = [];
+  for (const c of categories) {
+    buttons.push([Markup.button.callback(`❌ ${c.emoji} ${c.name}`, `delete_category_${c.id}`)]);
+  }
+  buttons.push([Markup.button.callback('➕ Yangi kategoriya', 'add_portfolio_category')]);
+  buttons.push([Markup.button.callback('🔙 Orqaga', 'admin_manage_portfolio')]);
+  return Markup.inlineKeyboard(buttons);
+};
+
+export const getPortfolioItemsManageKeyboard = () => {
+  const items = getAllPortfolioItems();
+  const buttons: any[] = [];
+  for (const item of items.slice(0, 10)) {
+    buttons.push([Markup.button.callback(`❌ ${item.title.substring(0, 30)}`, `delete_portfolio_${item.id}`)]);
+  }
+  buttons.push([Markup.button.callback('➕ Yangi portfolio ish', 'add_portfolio_item')]);
+  buttons.push([Markup.button.callback('🔙 Orqaga', 'admin_manage_portfolio')]);
+  return Markup.inlineKeyboard(buttons);
+};
+
+export const getSelectCategoryKeyboard = () => {
+  const categories = getAllPortfolioCategories();
+  const buttons = categories.map(c => [Markup.button.callback(`${c.emoji} ${c.name}`, `select_cat_${c.callback_id}`)]);
+  buttons.push([Markup.button.callback('🔙 Bekor qilish', 'admin_portfolio_items')]);
+  return Markup.inlineKeyboard(buttons);
+};
+
+export const companyInfoKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('📞 Telefon 1', 'edit_phone1')],
+  [Markup.button.callback('📞 Telefon 2', 'edit_phone2')],
+  [Markup.button.callback('📲 Telegram', 'edit_telegram')],
+  [Markup.button.callback('📍 Manzil', 'edit_address')],
+  [Markup.button.callback('ℹ️ Agentlik haqida matni', 'edit_about')],
+  [Markup.button.callback('🔙 Orqaga', 'admin_settings')]
 ]);
 
 export const getStatusKeyboard = (orderId: string) => Markup.inlineKeyboard([
@@ -75,3 +149,7 @@ export const broadcastConfirmKeyboard = Markup.inlineKeyboard([
 export const phoneRequestKeyboard = Markup.keyboard([
   [Markup.button.contactRequest('📲 Raqamni yuborish')]
 ]).resize().oneTime();
+
+export const cancelKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('❌ Bekor qilish', 'admin_settings')]
+]);

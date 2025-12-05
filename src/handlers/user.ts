@@ -2,17 +2,17 @@ import { Context, Telegraf } from 'telegraf';
 import { message } from 'telegraf/filters';
 import { 
   mainMenuKeyboard, 
-  serviceTypesKeyboard, 
+  getDynamicServiceTypesKeyboard, 
   budgetKeyboard, 
   fileUploadKeyboard,
   confirmOrderKeyboard,
-  portfolioCategoriesKeyboard,
+  getDynamicPortfolioCategoriesKeyboard,
   portfolioBackKeyboard,
   aboutBackKeyboard,
   phoneRequestKeyboard
 } from '../keyboards';
 import { texts, formatOrderSummary, formatOrderStatus, formatNewOrderAdmin } from '../texts';
-import { createOrder, generateOrderId, getOrderById, saveUser, Order } from '../db';
+import { createOrder, generateOrderId, getOrderById, saveUser, Order, getServiceByCallbackId, getPortfolioItemsByCategory } from '../db';
 import { config } from '../config';
 
 interface SessionData {
@@ -33,15 +33,6 @@ const getSession = (userId: number): SessionData => {
 
 const clearSession = (userId: number): void => {
   sessions.set(userId, {});
-};
-
-const serviceTypeMap: Record<string, string> = {
-  'service_grafika': '🎨 Grafika dizayni',
-  'service_poligrafiya': '🖨 Poligrafiya',
-  'service_3d': '🧱 3D lettering va hajmli yozuvlar',
-  'service_brending': '🧬 Brending / Rebrending',
-  'service_smm': '📱 SMM dizayn',
-  'service_boshqa': '🧾 Boshqa xizmat'
 };
 
 const budgetMap: Record<string, string> = {
@@ -68,12 +59,12 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     const session = getSession(ctx.from.id);
     session.step = 'select_service';
     session.orderData = { user_id: ctx.from.id };
-    await ctx.reply(texts.selectService, serviceTypesKeyboard);
+    await ctx.reply(texts.selectService, getDynamicServiceTypesKeyboard());
   });
 
   bot.hears('📂 Ishlarimiz (Portfolio)', async (ctx) => {
     clearSession(ctx.from.id);
-    await ctx.reply(texts.portfolioSelect, portfolioCategoriesKeyboard);
+    await ctx.reply(texts.portfolioSelect, getDynamicPortfolioCategoriesKeyboard());
   });
 
   bot.hears('📊 Buyurtmam holati', async (ctx) => {
@@ -87,22 +78,23 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     const session = getSession(ctx.from.id);
     session.waitingForQuestion = true;
     session.waitingForOrderId = false;
-    await ctx.reply(texts.contact);
+    await ctx.reply(texts.getContact());
   });
 
   bot.hears('ℹ️ Agentlik haqida', async (ctx) => {
     clearSession(ctx.from.id);
-    await ctx.reply(texts.about, aboutBackKeyboard);
+    await ctx.reply(texts.getAbout(), aboutBackKeyboard);
   });
 
   bot.action(/^service_/, async (ctx) => {
     const session = getSession(ctx.from.id);
     const callbackData = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
-    const serviceType = serviceTypeMap[callbackData];
     
-    if (serviceType) {
+    const service = getServiceByCallbackId(callbackData);
+    
+    if (service) {
       session.orderData = session.orderData || { user_id: ctx.from.id };
-      session.orderData.service_type = serviceType;
+      session.orderData.service_type = `${service.emoji} ${service.name}`;
       session.step = 'ask_company';
       
       await ctx.answerCbQuery();
@@ -180,7 +172,7 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     session.orderData = { user_id: ctx.from.id };
     
     await ctx.answerCbQuery();
-    await ctx.reply(texts.selectService, serviceTypesKeyboard);
+    await ctx.reply(texts.selectService, getDynamicServiceTypesKeyboard());
   });
 
   bot.action('start_order', async (ctx) => {
@@ -189,7 +181,7 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     session.orderData = { user_id: ctx.from.id };
     
     await ctx.answerCbQuery();
-    await ctx.reply(texts.selectService, serviceTypesKeyboard);
+    await ctx.reply(texts.selectService, getDynamicServiceTypesKeyboard());
   });
 
   bot.action('back_main', async (ctx) => {
@@ -202,29 +194,26 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     const callbackData = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
     await ctx.answerCbQuery();
     
-    const portfolioItems: Record<string, { title: string; description: string }> = {
-      'portfolio_3d': {
-        title: 'The Beauty Room – 3D bo\'rtma harf',
-        description: 'Fon: qora, harflar: oq, LED yoritish\nManzil: Samarkand'
-      },
-      'portfolio_banner': {
-        title: 'Premium Banner dizayni',
-        description: 'O\'lcham: 3x6m, yuqori sifatli chop\nManzil: Toshkent'
-      },
-      'portfolio_logo': {
-        title: 'Milliy Mebel logotipi',
-        description: 'Zamonaviy minimalist uslub\nTo\'liq brend kitmligi'
-      },
-      'portfolio_smm': {
-        title: 'Instagram dizayn paketi',
-        description: 'Post, stories, highlights cover\n30 kun uchun kontent rejasi'
-      }
-    };
+    const items = getPortfolioItemsByCategory(callbackData);
     
-    const item = portfolioItems[callbackData];
-    if (item) {
-      const portfolioText = texts.portfolioItem(item.title, item.description);
-      await ctx.reply(portfolioText, portfolioBackKeyboard);
+    if (items.length === 0) {
+      await ctx.reply(texts.portfolioEmpty, portfolioBackKeyboard);
+      return;
+    }
+    
+    for (const item of items) {
+      if (item.photo_id) {
+        try {
+          await ctx.replyWithPhoto(item.photo_id, {
+            caption: texts.portfolioItem(item.title, item.description || ''),
+            ...portfolioBackKeyboard
+          });
+        } catch (e) {
+          await ctx.reply(texts.portfolioItem(item.title, item.description || ''), portfolioBackKeyboard);
+        }
+      } else {
+        await ctx.reply(texts.portfolioItem(item.title, item.description || ''), portfolioBackKeyboard);
+      }
     }
   });
 

@@ -1,5 +1,15 @@
-import { config } from './config';
+import { getSetting, getAllSettings } from './db';
 import { Order } from './db';
+
+export const getContactInfo = () => {
+  const settings = getAllSettings();
+  return {
+    phone1: settings.phone1 || '+998 90 123 45 67',
+    phone2: settings.phone2 || '+998 91 234 56 78',
+    telegram: settings.telegram || '@milliybrend',
+    address: settings.address || 'Samarkand shahar'
+  };
+};
 
 export const texts = {
   welcome: `Assalomu alaykum! 👋
@@ -52,33 +62,30 @@ Shu raqam orqali "📊 Buyurtmam holati" bo'limidan kuzatishingiz mumkin.`,
   orderNotFound: `Kechirasiz, bu raqam bo'yicha buyurtma topilmadi.
 Raqamni tekshirib, qaytadan urining yoki operatorlarimiz bilan bog'laning.`,
 
-  contact: `Biz bilan quyidagi usullar orqali bog'lanishingiz mumkin:
+  getContact: () => {
+    const info = getContactInfo();
+    return `Biz bilan quyidagi usullar orqali bog'lanishingiz mumkin:
 
-☎️ Telefon: ${config.contact.phone1}
-☎️ Telefon: ${config.contact.phone2}
-📲 Telegram: ${config.contact.telegram}
-📍 Manzil: ${config.contact.address}
+☎️ Telefon: ${info.phone1}
+☎️ Telefon: ${info.phone2}
+📲 Telegram: ${info.telegram}
+📍 Manzil: ${info.address}
 
-Savolingiz bo'lsa, shu yerga yozib qoldiring – menejerlarimiz siz bilan bog'lanishadi.`,
+Savolingiz bo'lsa, shu yerga yozib qoldiring – menejerlarimiz siz bilan bog'lanishadi.`;
+  },
 
   questionReceived: `Savolingiz qabul qilindi ✅
 Tez orada siz bilan bog'lanamiz.`,
 
-  about: `🎯 Milliy Brend Reklama Agentligi
-"Grafika, poligrafiya va innovatsion reklama markazi"
-
-Asosiy yo'nalishlar:
-• Grafika va SMM dizayn
-• Poligrafiya (vizitka, flyer, buklet, menyu, katalog)
-• 3D burtma harflar va hajmli yozuvlar
-• Brending va rebrending
-• Veb-sayt va taqdimot dizayni
-
-Bizning maqsadimiz – sizning biznesingizni yangi bosqichga olib chiqish va brendingizni bozorda ajralib turadigan darajaga chiqarish.
+  getAbout: () => {
+    const aboutText = getSetting('about_text');
+    const info = getContactInfo();
+    return `${aboutText || 'Milliy Brend Reklama Agentligi'}
 
 Batafsil ma'lumot uchun:
-📞 Telefon: ${config.contact.phone1}
-🌐 Sayt: (keyin qo'shiladi)`,
+📞 Telefon: ${info.phone1}
+🌐 Sayt: (keyin qo'shiladi)`;
+  },
 
   portfolioSelect: `Qaysi yo'nalishdagi ishlarimizni ko'rmoqchisiz? 👇`,
 
@@ -87,6 +94,9 @@ ${description}
 
 Sizga shunga o'xshash reklama kerakmi?
 "🧾 Buyurtma berish" tugmasini bosing 👇`,
+
+  portfolioEmpty: `Bu kategoriyada hali ishlar yo'q.
+Tez orada qo'shiladi!`,
 
   adminPanel: `⚙️ Admin panel
 Tanlang:`,
@@ -107,7 +117,81 @@ Yangi status: ${newStatus}`,
 
   broadcastSent: (count: number) => `Xabar ${count} ta foydalanuvchiga yuborildi ✅`,
 
-  broadcastCancelled: `Xabar yuborish bekor qilindi.`
+  broadcastCancelled: `Xabar yuborish bekor qilindi.`,
+
+  adminSettings: `⚙️ Sozlamalar
+Tanlang:`,
+
+  adminServices: `🔧 Xizmatlar ro'yxati
+O'chirish uchun xizmat ustiga bosing yoki yangi qo'shing:`,
+
+  adminAddService: `Yangi xizmat qo'shish uchun quyidagi formatda yozing:
+
+emoji xizmat_nomi
+
+Masalan:
+🎬 Video montaj`,
+
+  adminServiceAdded: `Xizmat muvaffaqiyatli qo'shildi ✅`,
+
+  adminServiceDeleted: `Xizmat o'chirildi ✅`,
+
+  adminPortfolio: `🖼 Portfolio boshqaruvi
+Tanlang:`,
+
+  adminPortfolioCategories: `📁 Portfolio kategoriyalari
+O'chirish uchun kategoriya ustiga bosing yoki yangi qo'shing:`,
+
+  adminAddCategory: `Yangi kategoriya qo'shish uchun quyidagi formatda yozing:
+
+emoji kategoriya_nomi
+
+Masalan:
+🎬 Video ishlar`,
+
+  adminCategoryAdded: `Kategoriya muvaffaqiyatli qo'shildi ✅`,
+
+  adminCategoryDeleted: `Kategoriya o'chirildi ✅`,
+
+  adminPortfolioItems: `🖼 Portfolio ishlar
+O'chirish uchun ish ustiga bosing yoki yangi qo'shing:`,
+
+  adminAddPortfolioItem: `Yangi portfolio ish qo'shish.
+Avval kategoriyani tanlang:`,
+
+  adminPortfolioItemTitle: `Portfolio ish sarlavhasini kiriting:`,
+
+  adminPortfolioItemDescription: `Portfolio ish tavsifini kiriting:`,
+
+  adminPortfolioItemPhoto: `Portfolio ish rasmini yuboring (yoki "❌ Rasmsiz" deb yozing):`,
+
+  adminPortfolioItemAdded: `Portfolio ish muvaffaqiyatli qo'shildi ✅`,
+
+  adminPortfolioItemDeleted: `Portfolio ish o'chirildi ✅`,
+
+  adminCompanyInfo: () => {
+    const info = getContactInfo();
+    const about = getSetting('about_text') || '';
+    return `🏢 Kompaniya ma'lumotlari
+
+📞 Telefon 1: ${info.phone1}
+📞 Telefon 2: ${info.phone2}
+📲 Telegram: ${info.telegram}
+📍 Manzil: ${info.address}
+
+ℹ️ Agentlik haqida:
+${about.substring(0, 200)}${about.length > 200 ? '...' : ''}
+
+O'zgartirish uchun kerakli maydonni tanlang:`;
+  },
+
+  adminEditPhone1: `Yangi telefon raqamini kiriting (Telefon 1):`,
+  adminEditPhone2: `Yangi telefon raqamini kiriting (Telefon 2):`,
+  adminEditTelegram: `Yangi Telegram username kiriting:`,
+  adminEditAddress: `Yangi manzilni kiriting:`,
+  adminEditAbout: `Agentlik haqida yangi matnni kiriting:`,
+
+  adminSettingUpdated: `Ma'lumot muvaffaqiyatli yangilandi ✅`
 };
 
 export const formatOrderSummary = (order: Partial<Order>): string => {
