@@ -72,6 +72,7 @@ export const adminSettingsKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('🔧 Xizmatlar', 'admin_manage_services')],
   [Markup.button.callback('🖼 Portfolio', 'admin_manage_portfolio')],
   [Markup.button.callback('🏢 Kompaniya ma\'lumotlari', 'admin_company_info')],
+  [Markup.button.callback('👥 Worker adminlar', 'admin_manage_workers')],
   [Markup.button.callback('🔙 Admin panel', 'admin_back')]
 ]);
 
@@ -152,4 +153,35 @@ export const phoneRequestKeyboard = Markup.keyboard([
 
 export const cancelKeyboard = Markup.inlineKeyboard([
   [Markup.button.callback('❌ Bekor qilish', 'admin_settings')]
+]);
+
+export const getReplyKeyboard = (questionId: number) => Markup.inlineKeyboard([
+  [Markup.button.callback('✉️ Javob yozish', `reply_question_${questionId}`)]
+]);
+
+export const broadcastButtonsKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('✅ Buttonsiz yuborish', 'broadcast_no_buttons')],
+  [Markup.button.callback('🔘 Button qo\'shish', 'broadcast_add_buttons')],
+  [Markup.button.callback('❌ Bekor qilish', 'broadcast_cancel')]
+]);
+
+export const getWorkerAdminsKeyboard = () => {
+  const { getWorkerAdmins } = require('./db');
+  const admins = getWorkerAdmins();
+  const buttons: any[] = [];
+  for (const admin of admins) {
+    const name = admin.full_name || admin.username || `ID: ${admin.user_id}`;
+    buttons.push([Markup.button.callback(`❌ ${name}`, `remove_admin_${admin.user_id}`)]);
+  }
+  buttons.push([Markup.button.callback('➕ Yangi admin qo\'shish', 'add_worker_admin')]);
+  buttons.push([Markup.button.callback('🔙 Orqaga', 'admin_settings')]);
+  return Markup.inlineKeyboard(buttons);
+};
+
+export const cancelAdminActionKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('❌ Bekor qilish', 'admin_manage_workers')]
+]);
+
+export const cancelReplyKeyboard = Markup.inlineKeyboard([
+  [Markup.button.callback('❌ Bekor qilish', 'admin_back')]
 ]);

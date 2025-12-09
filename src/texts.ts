@@ -191,7 +191,37 @@ O'zgartirish uchun kerakli maydonni tanlang:`;
   adminEditAddress: `Yangi manzilni kiriting:`,
   adminEditAbout: `Agentlik haqida yangi matnni kiriting:`,
 
-  adminSettingUpdated: `Ma'lumot muvaffaqiyatli yangilandi ✅`
+  adminSettingUpdated: `Ma'lumot muvaffaqiyatli yangilandi ✅`,
+
+  adminWorkers: `👥 Worker adminlar ro'yxati
+O'chirish uchun admin ustiga bosing yoki yangi qo'shing:`,
+
+  adminAddWorker: `Yangi worker admin qo'shish.
+Foydalanuvchi Telegram ID sini kiriting:`,
+
+  adminWorkerAdded: `Worker admin muvaffaqiyatli qo'shildi ✅`,
+
+  adminWorkerRemoved: `Worker admin o'chirildi ✅`,
+
+  adminWorkerExists: `Bu foydalanuvchi allaqachon admin ro'yxatida.`,
+
+  notSuperAdmin: `Bu funksiya faqat super admin uchun.`,
+
+  broadcastAskButtons: `Xabar uchun button qo'shmoqchimisiz?`,
+
+  broadcastButtonFormat: `Button formatini kiriting:
+Har bir qatorda bitta button:
+button_matni | havola
+
+Masalan:
+Saytimiz | https://example.com
+Telegram | https://t.me/username
+
+Yoki "Tayyor" deb yozing tugallash uchun.`,
+
+  replyToUser: `Foydalanuvchiga javob xabaringizni yozing:`,
+
+  replySent: `Javob foydalanuvchiga yuborildi ✅`
 };
 
 export const formatOrderSummary = (order: Partial<Order>): string => {

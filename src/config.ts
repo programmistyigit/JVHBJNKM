@@ -4,6 +4,7 @@ dotenv.config();
 export const config = {
   botToken: process.env.BOT_TOKEN || '',
   adminIds: (process.env.ADMIN_IDS || '').split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id)),
+  superAdminId: parseInt(process.env.SUPER_ADMIN_ID || '0'),
   adminChatId: process.env.ADMIN_CHAT_ID || '',
   
   contact: {
@@ -15,5 +16,9 @@ export const config = {
 };
 
 export const isAdmin = (userId: number): boolean => {
-  return config.adminIds.includes(userId);
+  return config.adminIds.includes(userId) || userId === config.superAdminId;
+};
+
+export const isSuperAdmin = (userId: number): boolean => {
+  return userId === config.superAdminId || (config.adminIds.length > 0 && config.adminIds[0] === userId);
 };

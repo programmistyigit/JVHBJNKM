@@ -1,6 +1,6 @@
-import { Telegraf } from 'telegraf';
+import { Telegraf, Markup } from 'telegraf';
 import { message } from 'telegraf/filters';
-import { isAdmin, config } from '../config';
+import { isAdmin, isSuperAdmin, config } from '../config';
 import { 
   adminMenuKeyboard, 
   getStatusKeyboard, 
@@ -13,7 +13,12 @@ import {
   getPortfolioItemsManageKeyboard,
   getSelectCategoryKeyboard,
   companyInfoKeyboard,
-  cancelKeyboard
+  cancelKeyboard,
+  getReplyKeyboard,
+  broadcastButtonsKeyboard,
+  getWorkerAdminsKeyboard,
+  cancelAdminActionKeyboard,
+  cancelReplyKeyboard
 } from '../keyboards';
 import { 
   texts, 
@@ -34,14 +39,26 @@ import {
   addPortfolioItem,
   deletePortfolioItem,
   setSetting,
-  getSetting
+  getSetting,
+  addAdmin,
+  removeAdmin,
+  getQuestionById,
+  markQuestionReplied,
+  saveUserQuestion
 } from '../db';
+
+interface BroadcastButton {
+  text: string;
+  url: string;
+}
 
 interface AdminSession {
   waitingForSearch?: boolean;
   waitingForStatusOrderId?: boolean;
   waitingForBroadcast?: boolean;
   broadcastMessage?: string;
+  broadcastButtons?: BroadcastButton[];
+  waitingForBroadcastButtons?: boolean;
   pendingStatusOrderId?: string;
   waitingForNewService?: boolean;
   waitingForNewCategory?: boolean;
@@ -56,6 +73,10 @@ interface AdminSession {
   waitingForTelegram?: boolean;
   waitingForAddress?: boolean;
   waitingForAbout?: boolean;
+  waitingForNewAdmin?: boolean;
+  waitingForReply?: boolean;
+  replyQuestionId?: number;
+  replyUserId?: number;
 }
 
 const adminSessions = new Map<number, AdminSession>();
@@ -370,6 +391,107 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
     await ctx.reply(texts.adminEditAbout, cancelKeyboard);
   });
 
+  // Worker admin management (Super admin only)
+  bot.action('admin_manage_workers', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    if (!isSuperAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notSuperAdmin);
+      return;
+    }
+    await ctx.answerCbQuery();
+    await ctx.reply(texts.adminWorkers, getWorkerAdminsKeyboard());
+  });
+
+  bot.action('add_worker_admin', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    if (!isSuperAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notSuperAdmin);
+      return;
+    }
+    const session = getAdminSession(ctx.from.id);
+    session.waitingForNewAdmin = true;
+    await ctx.answerCbQuery();
+    await ctx.reply(texts.adminAddWorker, cancelAdminActionKeyboard);
+  });
+
+  bot.action(/^remove_admin_(\d+)$/, async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    if (!isSuperAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notSuperAdmin);
+      return;
+    }
+    const callbackData = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
+    const match = callbackData.match(/^remove_admin_(\d+)$/);
+    if (match) {
+      const userId = parseInt(match[1]);
+      removeAdmin(userId);
+      await ctx.answerCbQuery(texts.adminWorkerRemoved);
+      await ctx.reply(texts.adminWorkers, getWorkerAdminsKeyboard());
+    }
+  });
+
+  // Reply to user question
+  bot.action(/^reply_question_(\d+)$/, async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    const callbackData = 'data' in ctx.callbackQuery ? ctx.callbackQuery.data : '';
+    const match = callbackData.match(/^reply_question_(\d+)$/);
+    if (match) {
+      const questionId = parseInt(match[1]);
+      const question = getQuestionById(questionId);
+      
+      if (question) {
+        const session = getAdminSession(ctx.from.id);
+        session.waitingForReply = true;
+        session.replyQuestionId = questionId;
+        session.replyUserId = question.user_id;
+        await ctx.answerCbQuery();
+        await ctx.reply(texts.replyToUser, cancelReplyKeyboard);
+      } else {
+        await ctx.answerCbQuery('Savol topilmadi!');
+      }
+    }
+  });
+
+  // Broadcast with buttons
+  bot.action('broadcast_no_buttons', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    
+    const session = getAdminSession(ctx.from.id);
+    session.broadcastButtons = [];
+    
+    await ctx.answerCbQuery();
+    await ctx.reply(`Xabar:\n\n${session.broadcastMessage}\n\n${texts.broadcastConfirm}`, broadcastConfirmKeyboard);
+  });
+
+  bot.action('broadcast_add_buttons', async (ctx) => {
+    if (!isAdmin(ctx.from.id)) {
+      await ctx.answerCbQuery(texts.notAdmin);
+      return;
+    }
+    
+    const session = getAdminSession(ctx.from.id);
+    session.waitingForBroadcastButtons = true;
+    session.broadcastButtons = [];
+    
+    await ctx.answerCbQuery();
+    await ctx.reply(texts.broadcastButtonFormat);
+  });
+
   bot.action(/^status_MBR-\d+_.+$/, async (ctx) => {
     if (!isAdmin(ctx.from.id)) {
       await ctx.answerCbQuery(texts.notAdmin);
@@ -414,6 +536,7 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
     
     const session = getAdminSession(ctx.from.id);
     const message = session.broadcastMessage;
+    const buttons = session.broadcastButtons || [];
     
     if (!message) {
       await ctx.answerCbQuery('Xabar topilmadi!');
@@ -425,9 +548,19 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
     const userIds = getAllUserIds();
     let successCount = 0;
     
+    let keyboard = undefined;
+    if (buttons.length > 0) {
+      const inlineButtons = buttons.map(b => [Markup.button.url(b.text, b.url)]);
+      keyboard = Markup.inlineKeyboard(inlineButtons);
+    }
+    
     for (const userId of userIds) {
       try {
-        await ctx.telegram.sendMessage(userId, message);
+        if (keyboard) {
+          await ctx.telegram.sendMessage(userId, message, keyboard);
+        } else {
+          await ctx.telegram.sendMessage(userId, message);
+        }
         successCount++;
       } catch (e) {
         console.error(`Failed to send broadcast to ${userId}:`, e);
@@ -488,6 +621,82 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
       
       if (text.startsWith('/')) {
         return next();
+      }
+
+      // Handle reply to user
+      if (session.waitingForReply && session.replyUserId) {
+        session.waitingForReply = false;
+        
+        try {
+          await ctx.telegram.sendMessage(
+            session.replyUserId,
+            `📩 Milliy Brend dan javob:\n\n${text}`
+          );
+          
+          if (session.replyQuestionId) {
+            markQuestionReplied(session.replyQuestionId);
+          }
+          
+          await ctx.reply(texts.replySent);
+        } catch (e) {
+          console.error(`Failed to send reply to user ${session.replyUserId}:`, e);
+          await ctx.reply('Xatolik: Foydalanuvchiga xabar yuborib bo\'lmadi.');
+        }
+        
+        clearAdminSession(ctx.from.id);
+        return;
+      }
+
+      // Handle new admin ID
+      if (session.waitingForNewAdmin) {
+        session.waitingForNewAdmin = false;
+        
+        const adminUserId = parseInt(text);
+        if (isNaN(adminUserId)) {
+          await ctx.reply('Noto\'g\'ri ID format. Raqam kiriting.');
+          await ctx.reply(texts.adminWorkers, getWorkerAdminsKeyboard());
+          return;
+        }
+        
+        const result = addAdmin(adminUserId, null, null, 'worker');
+        if (result) {
+          await ctx.reply(texts.adminWorkerAdded);
+        } else {
+          await ctx.reply(texts.adminWorkerExists);
+        }
+        await ctx.reply(texts.adminWorkers, getWorkerAdminsKeyboard());
+        return;
+      }
+
+      // Handle broadcast buttons input
+      if (session.waitingForBroadcastButtons) {
+        if (text.toLowerCase() === 'tayyor') {
+          session.waitingForBroadcastButtons = false;
+          
+          const buttons = session.broadcastButtons || [];
+          let buttonsPreview = '';
+          if (buttons.length > 0) {
+            buttonsPreview = '\n\nButtonlar:\n' + buttons.map(b => `• ${b.text}`).join('\n');
+          }
+          
+          await ctx.reply(`Xabar:\n\n${session.broadcastMessage}${buttonsPreview}\n\n${texts.broadcastConfirm}`, broadcastConfirmKeyboard);
+          return;
+        }
+        
+        const lines = text.split('\n');
+        for (const line of lines) {
+          if (line.includes('|')) {
+            const parts = line.split('|').map((p: string) => p.trim());
+            if (parts.length === 2 && parts[0] && parts[1]) {
+              session.broadcastButtons = session.broadcastButtons || [];
+              session.broadcastButtons.push({ text: parts[0], url: parts[1] });
+            }
+          }
+        }
+        
+        const addedCount = session.broadcastButtons?.length || 0;
+        await ctx.reply(`${addedCount} ta button qo'shildi. Yana qo'shish uchun davom eting yoki "Tayyor" deb yozing.`);
+        return;
       }
 
       if (session.waitingForNewService) {
@@ -639,7 +848,7 @@ export const setupAdminHandlers = (bot: Telegraf): void => {
         session.waitingForBroadcast = false;
         session.broadcastMessage = text;
         
-        await ctx.reply(`Xabar:\n\n${text}\n\n${texts.broadcastConfirm}`, broadcastConfirmKeyboard);
+        await ctx.reply(`Xabar:\n\n${text}\n\n${texts.broadcastAskButtons}`, broadcastButtonsKeyboard);
         return;
       }
     }

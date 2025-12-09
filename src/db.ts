@@ -74,6 +74,30 @@ db.exec(`
   )
 `);
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS admins (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    username TEXT,
+    full_name TEXT,
+    role TEXT DEFAULT 'worker',
+    is_active INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS user_questions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    username TEXT,
+    full_name TEXT,
+    question TEXT NOT NULL,
+    replied INTEGER DEFAULT 0,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )
+`);
+
 const defaultServices = [
   { emoji: '🎨', name: 'Grafika dizayni (post, banner, logo...)', callback_id: 'service_grafika' },
   { emoji: '🖨', name: 'Poligrafiya (vizitka, flyer, buklet, katalog)', callback_id: 'service_poligrafiya' },
@@ -320,6 +344,66 @@ export const getAllSettings = (): Record<string, string> => {
     settings[row.key] = row.value;
   }
   return settings;
+};
+
+export interface Admin {
+  id: number;
+  user_id: number;
+  username: string | null;
+  full_name: string | null;
+  role: string;
+  is_active: number;
+  created_at: string;
+}
+
+export interface UserQuestion {
+  id: number;
+  user_id: number;
+  username: string | null;
+  full_name: string | null;
+  question: string;
+  replied: number;
+  created_at: string;
+}
+
+export const addAdmin = (userId: number, username: string | null, fullName: string | null, role: string = 'worker'): Admin | null => {
+  try {
+    db.prepare('INSERT INTO admins (user_id, username, full_name, role) VALUES (?, ?, ?, ?)').run(userId, username, fullName, role);
+    return db.prepare('SELECT * FROM admins WHERE user_id = ?').get(userId) as Admin;
+  } catch (e) {
+    return null;
+  }
+};
+
+export const removeAdmin = (userId: number): boolean => {
+  const result = db.prepare('DELETE FROM admins WHERE user_id = ?').run(userId);
+  return result.changes > 0;
+};
+
+export const getAdminByUserId = (userId: number): Admin | undefined => {
+  return db.prepare('SELECT * FROM admins WHERE user_id = ? AND is_active = 1').get(userId) as Admin | undefined;
+};
+
+export const getAllAdmins = (): Admin[] => {
+  return db.prepare('SELECT * FROM admins WHERE is_active = 1 ORDER BY created_at DESC').all() as Admin[];
+};
+
+export const getWorkerAdmins = (): Admin[] => {
+  return db.prepare('SELECT * FROM admins WHERE role = ? AND is_active = 1 ORDER BY created_at DESC').all('worker') as Admin[];
+};
+
+export const saveUserQuestion = (userId: number, username: string | null, fullName: string | null, question: string): UserQuestion => {
+  const result = db.prepare('INSERT INTO user_questions (user_id, username, full_name, question) VALUES (?, ?, ?, ?)').run(userId, username, fullName, question);
+  return db.prepare('SELECT * FROM user_questions WHERE id = ?').get(result.lastInsertRowid) as UserQuestion;
+};
+
+export const getQuestionById = (id: number): UserQuestion | undefined => {
+  return db.prepare('SELECT * FROM user_questions WHERE id = ?').get(id) as UserQuestion | undefined;
+};
+
+export const markQuestionReplied = (id: number): boolean => {
+  const result = db.prepare('UPDATE user_questions SET replied = 1 WHERE id = ?').run(id);
+  return result.changes > 0;
 };
 
 export default db;

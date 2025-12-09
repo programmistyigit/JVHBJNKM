@@ -9,10 +9,11 @@ import {
   getDynamicPortfolioCategoriesKeyboard,
   portfolioBackKeyboard,
   aboutBackKeyboard,
-  phoneRequestKeyboard
+  phoneRequestKeyboard,
+  getReplyKeyboard
 } from '../keyboards';
 import { texts, formatOrderSummary, formatOrderStatus, formatNewOrderAdmin } from '../texts';
-import { createOrder, generateOrderId, getOrderById, saveUser, Order, getServiceByCallbackId, getPortfolioItemsByCategory } from '../db';
+import { createOrder, generateOrderId, getOrderById, saveUser, Order, getServiceByCallbackId, getPortfolioItemsByCategory, saveUserQuestion } from '../db';
 import { config } from '../config';
 
 interface SessionData {
@@ -283,16 +284,18 @@ export const setupUserHandlers = (bot: Telegraf): void => {
     if (session.waitingForQuestion) {
       session.waitingForQuestion = false;
       
-      const username = ctx.from.username ? `@${ctx.from.username}` : 'N/A';
+      const username = ctx.from.username ? `@${ctx.from.username}` : null;
       const fullName = `${ctx.from.first_name || ''} ${ctx.from.last_name || ''}`.trim();
       
+      const savedQuestion = saveUserQuestion(ctx.from.id, username, fullName, text);
+      
       const questionMessage = `✉️ Yangi savol botdan:
-User: ${username} / ${fullName}
-Matn: ${text}`;
+👤 User: ${username || 'N/A'} / ${fullName}
+📝 Matn: ${text}`;
       
       for (const adminId of config.adminIds) {
         try {
-          await ctx.telegram.sendMessage(adminId, questionMessage);
+          await ctx.telegram.sendMessage(adminId, questionMessage, getReplyKeyboard(savedQuestion.id));
         } catch (e) {
           console.error(`Failed to forward question to admin ${adminId}:`, e);
         }
