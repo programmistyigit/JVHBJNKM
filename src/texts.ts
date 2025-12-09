@@ -4,9 +4,9 @@ import { Order } from './db';
 export const getContactInfo = () => {
   const settings = getAllSettings();
   return {
-    phone1: settings.phone1 || '+998 90 123 45 67',
-    phone2: settings.phone2 || '+998 91 234 56 78',
-    telegram: settings.telegram || '@milliybrend',
+    phone1: settings.phone1 || '+998 99 567 39 34',
+    phone2: settings.phone2 || '+998 95 550 60 40',
+    telegram: settings.telegram || '@milliy_brend_agency',
     address: settings.address || 'Samarkand shahar'
   };
 };
@@ -71,7 +71,7 @@ Raqamni tekshirib, qaytadan urining yoki operatorlarimiz bilan bog'laning.`,
 📲 Telegram: ${info.telegram}
 📍 Manzil: ${info.address}
 
-Savolingiz bo'lsa, shu yerga yozib qoldiring – menejerlarimiz siz bilan bog'lanishadi.`;
+🖋️Savolingiz bo'lsa, shu yerga yozib qoldiring – menejerlarimiz siz bilan bog'lanishadi.`;
   },
 
   questionReceived: `Savolingiz qabul qilindi ✅
@@ -84,7 +84,7 @@ Tez orada siz bilan bog'lanamiz.`,
 
 Batafsil ma'lumot uchun:
 📞 Telefon: ${info.phone1}
-🌐 Sayt: (keyin qo'shiladi)`;
+🌐 Sayt: http://milliybrendagency.uz`;
   },
 
   portfolioSelect: `Qaysi yo'nalishdagi ishlarimizni ko'rmoqchisiz? 👇`,
