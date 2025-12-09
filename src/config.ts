@@ -16,9 +16,25 @@ export const config = {
 };
 
 export const isAdmin = (userId: number): boolean => {
-  return config.adminIds.includes(userId) || userId === config.superAdminId;
+  if (config.adminIds.includes(userId) || userId === config.superAdminId) {
+    return true;
+  }
+  const { getAdminByUserId } = require('./db');
+  const dbAdmin = getAdminByUserId(userId);
+  return !!dbAdmin;
 };
 
 export const isSuperAdmin = (userId: number): boolean => {
   return userId === config.superAdminId || (config.adminIds.length > 0 && config.adminIds[0] === userId);
+};
+
+export const getAllAdminIds = (): number[] => {
+  const { getAllAdmins } = require('./db');
+  const dbAdmins = getAllAdmins();
+  const dbAdminIds = dbAdmins.map((a: any) => a.user_id);
+  const allIds = [...config.adminIds, ...dbAdminIds];
+  if (config.superAdminId && !allIds.includes(config.superAdminId)) {
+    allIds.push(config.superAdminId);
+  }
+  return [...new Set(allIds)];
 };

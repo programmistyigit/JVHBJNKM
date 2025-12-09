@@ -14,7 +14,7 @@ import {
 } from '../keyboards';
 import { texts, formatOrderSummary, formatOrderStatus, formatNewOrderAdmin } from '../texts';
 import { createOrder, generateOrderId, getOrderById, saveUser, Order, getServiceByCallbackId, getPortfolioItemsByCategory, saveUserQuestion } from '../db';
-import { config } from '../config';
+import { config, getAllAdminIds } from '../config';
 
 interface SessionData {
   step?: string;
@@ -157,7 +157,7 @@ export const setupUserHandlers = (bot: Telegraf): void => {
       await ctx.answerCbQuery();
       await ctx.reply(texts.orderSuccess(orderId), mainMenuKeyboard);
 
-      for (const adminId of config.adminIds) {
+      for (const adminId of getAllAdminIds()) {
         try {
           await ctx.telegram.sendMessage(adminId, formatNewOrderAdmin(order));
         } catch (e) {
@@ -293,7 +293,7 @@ export const setupUserHandlers = (bot: Telegraf): void => {
 👤 User: ${username || 'N/A'} / ${fullName}
 📝 Matn: ${text}`;
       
-      for (const adminId of config.adminIds) {
+      for (const adminId of getAllAdminIds()) {
         try {
           await ctx.telegram.sendMessage(adminId, questionMessage, getReplyKeyboard(savedQuestion.id));
         } catch (e) {

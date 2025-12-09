@@ -86,3 +86,11 @@ npm run prod   # Run production build
 - Added company settings management (phone, telegram, address, about text)
 - All user-facing content now loads from database
 - Admin panel extended with "Sozlamalar" section
+
+### December 2025 Updates
+- **Reply to User Questions** - Admins can now reply directly to user questions from "Bog'lanish" section via inline button
+- **Broadcast with Buttons** - Admin broadcast now supports inline URL buttons (format: "button_text | url")
+- **Worker Admin Management** - Super admin can add/remove worker admins via "Worker adminlar" menu in settings
+- Added new database tables: `admins` (worker admin management), `user_questions` (question tracking)
+- Updated admin detection to include database-managed worker admins
+- Added `getAllAdminIds()` function to include both env-based and DB-based admins for notifications
